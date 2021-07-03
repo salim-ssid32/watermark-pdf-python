@@ -4,6 +4,7 @@
 print("give me a bottle of rum!")
 
 from os.path import exists
+from os import remove
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
@@ -11,6 +12,7 @@ from PIL import ImageEnhance
 from pdf2image import convert_from_path, convert_from_bytes
 from wand.image import Image as wimage
 import io
+from flask.json import uuid as ud
 
 
 def text2image(text):
@@ -80,9 +82,36 @@ def mark_pdf(text, pdf_file, output):
         create_watermark2(i, text_img)
     pdf_imgs[0].save(output, save_all=True, append_images=pdf_imgs[1:])
 
+def mark_pdf_bytes(text, pdf_file):
+    output = '/tmp/'+get_random_name()+'.pdf'
+    text_img = text2image(text)
+    pdf_imgs = load_pdf2(pdf_file)
+    for i in pdf_imgs:
+        create_watermark2(i, text_img)
+    pdf_imgs[0].save(output, save_all=True, append_images=pdf_imgs[1:])
+    out = open(output,'rb').read()
+    remove(output)
+    remove(pdf_file)
+    return out
+
+####################
+# UTILS 
+####################
+
+def get_random_name():
+    return str(ud.uuid1())
+
+def make_temp_file(data):
+    name = '/tmp/'+get_random_name()+'.pdf'
+    open(name,'wb').write(data)
+    return name
+
+def bytes_to_image(data):
+    return Image.open(io.BytesIO(data))
+
 ###############
 # Test the code
 ###############
-
-watermark_pdf.mark_pdf("Salim", "doc2.pdf", "finfin2.pdf")
+if __name__ == "__main__":
+    mark_pdf("Salim", "doc2.pdf", "finfin2.pdf")
 
